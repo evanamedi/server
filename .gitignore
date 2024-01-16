@@ -1,3 +1,5 @@
 #venv
 venv/
 .DS_Store
+client_requests.db
+server.log
