@@ -1,5 +1,5 @@
 #venv
-venv/
+/virtual
 .DS_Store
 client_requests.db
 server.log
