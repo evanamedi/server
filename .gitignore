@@ -1,2 +1,3 @@
 #venv
-/virtual
+venv/
+.DS_Store
