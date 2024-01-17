@@ -1,31 +1,54 @@
 import socket       
-import threading    
-import os           
-import logging      
-import sqlite3      
-import datetime     
+import threading               
+import logging           
+import datetime 
+import os
+import psycopg2
+from dotenv import load_dotenv
 
-HOST = os.getenv("Host", "localhost")
-PORT = int(os.getenv("PORT", 8888))
+load_dotenv()
+
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+
+HOST = os.getenv("host", "localhost")
+PORT = int(os.getenv("port", 8888))
 
 logging.basicConfig(filename = "server.log", level = logging.INFO)
 
-conn = sqlite3.connect("client_requests.db")
-c = conn.cursor()
-c.execute("""
-        CREATE TABLE IF NOT EXISTS requests (
-        id INTEGER PRIMARY KEY,
-        client_address TEXT,
-        request_time TEXT
-        )
-    """)
-conn.commit()
-conn.close()
+def create_table():
+    conn = psycopg2.connect(
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        host=DB_HOST,
+        port=DB_PORT
+    )
+    c = conn.cursor()
+    c.execute("""
+            CREATE TABLE IF NOT EXISTS requests (
+            id SERIAL PRIMARY KEY,
+            client_address TEXT,
+            request_time TEXT
+            )
+        """)
+    conn.commit()
+    conn.close()
 
+create_table()
 
 def handle_client(client_connection, client_address):
     
-    conn = sqlite3.connect("client_requests.db")
+    conn = psycopg2.connect(
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        host=DB_HOST,
+        port=DB_PORT
+    )
     c = conn.cursor()
     
     try:
@@ -41,7 +64,7 @@ def handle_client(client_connection, client_address):
         
         logging.info(f"Received request from {client_address}. Time: {formatted_now}")
         
-        c.execute("INSERT INTO requests (client_address, request_time) VALUES (?, ?)", (str(client_address), formatted_now))
+        c.execute("INSERT INTO requests (client_address, request_time) VALUES (%s, %s)", (str(client_address), formatted_now))
         conn.commit()
         
     except Exception as e:
